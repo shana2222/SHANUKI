@@ -150,15 +150,9 @@ const App: React.FC = () => {
         </div>
         <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-gray-500">
           <span className="hidden sm:inline">Generador Didáctico 5.0</span>
-          <img 
-            src="logoCC.png" 
-            onError={(e) => {
-              e.currentTarget.src = "https://api.dicebear.com/7.x/bottts/svg?seed=shanuki";
-              e.currentTarget.onerror = null; // Previene bucles infinitos si la imagen de fallback falla
-            }}
-            alt="Perfil" 
-            className="size-9 rounded-full border border-gray-700 object-cover bg-white" 
-          />
+          <div className="size-10 rounded-xl bg-gradient-to-br from-gray-800 to-gray-950 border border-gray-700 flex items-center justify-center shadow-lg shadow-primary/20 hover:border-primary/50 transition-all cursor-help group" title="CPU Core - Shanuki AI">
+             <span className="material-symbols-outlined text-primary text-2xl group-hover:text-white transition-colors">memory</span>
+          </div>
         </div>
       </header>
 

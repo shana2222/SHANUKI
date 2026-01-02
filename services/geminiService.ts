@@ -64,7 +64,7 @@ export const generateLearningUnit = async (inputs: UnitFormInputs): Promise<Gene
 
   // Se usa gemini-2.0-flash para evitar errores 429 (Too Many Requests) del modelo Pro Preview
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-1.5-flash",
     contents: finalPrompt,
     config: {
       temperature: 0.9, 

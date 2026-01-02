@@ -15,7 +15,8 @@ export const GAMIFIED_THEMES = [
   "Apocalipsis Zombie / Supervivencia",
   "Exploración Espacial / Misión Marte",
   "Detectives / Misterio Noir",
-  "Superhéroes / Academia de Poderes"
+  "Superhéroes / Academia de Poderes",
+  "Videojuegos / Minecraft"
 ];
 
 const COMMON_RULES = `
@@ -28,7 +29,6 @@ ESPECIFICACIONES TÉCNICAS (HTML5):
 
 IMPORTANTE:
 1. Entrega ÚNICAMENTE el código HTML completo y funcional.
-2. AL FINAL, incluye <SHANUKI_DATA>{"distractorWords": ["palabra1", "palabra2", "palabra3", "palabra4", "palabra5", "palabra6"]}</SHANUKI_DATA>.
 `;
 
 export const PBL_PROMPT = `PROMPT: UNIDAD DE APRENDIZAJE INTEGRAL CON ABP (TEORÍA + QUIZ + CÓDIGO)
@@ -50,7 +50,7 @@ MATERIALES DE CONSULTA:
 ESTRUCTURA:
 1. Problema Real: Presenta el desafío interdisciplinario.
 2. Teoría: Explica el [TEMA] basándote en el TEÓRICO ADJUNTO.
-3. Quiz: 3 preguntas conceptuales.
+3. Quiz: 3 preguntas conceptuales de opción múltiple profundas. REQUISITO CRÍTICO: Al responder, el sistema DEBE mostrar inmediatamente una retroalimentación explicativa indicando por qué la opción seleccionada es correcta o incorrecta.
 4. Desafío Práctico: Resuelve el problema de [MATERIA] usando código.
 
 ${COMMON_RULES}`;
@@ -77,7 +77,7 @@ INSTRUCCIONES DE DISEÑO VISUAL Y NARRATIVO:
 ESTRUCTURA:
 1. Misión Inicial: Introduce la historia.
 2. Entrenamiento (Teoría): Flashcards estilizadas según la narrativa.
-3. Prueba de Acceso (Quiz): Preguntas para avanzar.
+3. Prueba de Acceso (Quiz): Preguntas de opción múltiple para avanzar. REQUISITO CRÍTICO: Al responder, el sistema DEBE mostrar inmediatamente una retroalimentación explicativa (en personaje/narrativa) indicando por qué la opción seleccionada es correcta o incorrecta.
 4. Misión Final (Editor): Resolver el reto usando código para "ganar" el nivel.
 
 ${COMMON_RULES}`;
@@ -94,5 +94,4 @@ INSTRUCCIONES:
 1. Modifica el código HTML existente para satisfacer la solicitud del docente.
 2. Mantén la estructura funcional (Pyodide, PDF, etc.).
 3. Asegúrate de que el footer incluya el texto obligatorio: "Recurso generado por la app SHANUKI creado por el equipo académico de ciencias de la computación - CEIBAL - DPD y Licencia: Creative Commons CC BY-SA 4.0".
-4. Devuelve el HTML completo corregido.
-5. Incluye nuevamente el bloque <SHANUKI_DATA> al final.`;
+4. Devuelve el HTML completo corregido.`;

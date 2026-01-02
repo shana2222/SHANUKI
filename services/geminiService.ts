@@ -62,11 +62,12 @@ export const generateLearningUnit = async (inputs: UnitFormInputs): Promise<Gene
       .replace("[NARRATIVA]", inputs.narrativeTheme);
   }
 
+  // Se usa gemini-2.0-flash para evitar errores 429 (Too Many Requests) del modelo Pro Preview
   const response = await ai.models.generateContent({
-    model: "gemini-3-pro-preview",
+    model: "gemini-2.0-flash",
     contents: finalPrompt,
     config: {
-      temperature: 0.9, // Higher creativity for gamified/PBL scenarios
+      temperature: 0.9, 
     },
   });
 
@@ -81,7 +82,7 @@ export const updateLearningUnit = async (currentHtml: string, feedback: string):
     .replace("[USER_FEEDBACK]", feedback);
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-pro-preview",
+    model: "gemini-2.0-flash",
     contents: finalPrompt,
   });
 
@@ -95,7 +96,7 @@ export const suggestInterdisciplinarity = async (programText: string, level: str
   PROGRAMA: ${programText.substring(0, 5000)}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.0-flash",
     contents: prompt
   });
 

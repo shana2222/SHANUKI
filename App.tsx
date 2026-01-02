@@ -80,9 +80,12 @@ const App: React.FC = () => {
             setSuggesting(true);
             const suggestion = await suggestInterdisciplinarity(text, inputs.level);
             setInputs(prev => ({ ...prev, interdisciplinarySubject: suggestion }));
-        } catch (apiError) {
+        } catch (apiError: any) {
             console.error("Error de API al analizar interdisciplinariedad:", apiError);
-            alert("No se pudo conectar con la IA para analizar el programa. Verifica que la API Key esté configurada correctamente en Vercel o en tu archivo .env. Puedes ingresar la materia manualmente.");
+            let msg = "No se pudo conectar con la IA. ";
+            if (apiError.toString().includes("429")) msg += "Cuota excedida. Intenta en un minuto.";
+            else msg += "Verifica tu API Key.";
+            alert(msg);
         } finally {
             setSuggesting(false);
         }
@@ -105,9 +108,12 @@ const App: React.FC = () => {
       const data = await generateLearningUnit(inputs);
       setResult(data);
       setStep(2);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generando unidad:", error);
-      alert("Error al generar la unidad. Verifica la consola y tu API Key.");
+      let msg = "Error al generar la unidad. ";
+      if (error.toString().includes("429")) msg += "El servicio está saturado (Error 429). Por favor espera un momento e intenta de nuevo.";
+      else msg += "Verifica la consola y tu API Key.";
+      alert(msg);
     } finally {
       setLoading(false);
     }
@@ -121,9 +127,11 @@ const App: React.FC = () => {
       setResult(data);
       setFeedback("");
       alert("Unidad actualizada con éxito.");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Error al actualizar.");
+      let msg = "Error al actualizar. ";
+      if (error.toString().includes("429")) msg += "Cuota excedida (429). Espera un momento.";
+      alert(msg);
     } finally {
       setIsRegenerating(false);
     }

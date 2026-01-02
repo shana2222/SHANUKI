@@ -153,7 +153,7 @@ const App: React.FC = () => {
           <img 
             src="logoCC.png" 
             onError={(e) => {
-              e.currentTarget.src = "logoCC.png";
+              e.currentTarget.src = "https://api.dicebear.com/7.x/bottts/svg?seed=shanuki";
               e.currentTarget.onerror = null; // Previene bucles infinitos si la imagen de fallback falla
             }}
             alt="Perfil" 

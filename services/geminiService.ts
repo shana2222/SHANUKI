@@ -3,7 +3,48 @@ import { GoogleGenAI } from "@google/genai";
 import { UnitFormInputs, GenerationResult } from "../types";
 import { PBL_PROMPT, GAMIFIED_PROMPT, EDIT_PROMPT } from "../constants";
 
-const processResponse = (text: string): GenerationResult => {
+// Jerarquía de modelos: Alta Calidad -> Velocidad/Media -> Fallback Seguro
+const MODELS = [
+  "gemini-3-pro-preview",    // Intento 1: Máxima calidad
+  "gemini-3-flash-preview",  // Intento 2: Balanceado (Equivalente a tu petición de 2.5)
+  "gemini-2.0-flash"         // Intento 3: Fallback (Equivalente a tu petición de 1.5/Low tier)
+];
+
+// Helper para ejecutar con fallback
+const generateWithFallback = async (ai: GoogleGenAI, prompt: string, config: any = {}) => {
+  let lastError: any = null;
+
+  for (const model of MODELS) {
+    try {
+      console.log(`Intentando generar con modelo: ${model}`);
+      const response = await ai.models.generateContent({
+        model: model,
+        contents: prompt,
+        config: config,
+      });
+      
+      // Si llegamos aquí, funcionó
+      return { 
+        text: response.text || "", 
+        modelUsed: model 
+      };
+    } catch (error: any) {
+      console.warn(`Fallo en modelo ${model}:`, error.message);
+      lastError = error;
+      
+      // Si es un error de cuota (429) o servidor (503), continuamos al siguiente modelo.
+      // Si es otro tipo de error (ej. API Key inválida), tal vez deberíamos detenernos, 
+      // pero para asegurar robustez intentaremos el fallback.
+      if (model === MODELS[MODELS.length - 1]) {
+        // Si falló el último modelo, lanzamos el error
+        throw lastError;
+      }
+    }
+  }
+  throw lastError;
+};
+
+const processResponse = (text: string, modelUsed: string): GenerationResult => {
   let html = "";
   let distractors: string[] = [];
 
@@ -36,7 +77,8 @@ const processResponse = (text: string): GenerationResult => {
 
   return {
     html: html || "Error al generar el HTML.",
-    distractorWords: distractors
+    distractorWords: distractors,
+    modelUsed: modelUsed
   };
 };
 
@@ -62,16 +104,8 @@ export const generateLearningUnit = async (inputs: UnitFormInputs): Promise<Gene
       .replace("[NARRATIVA]", inputs.narrativeTheme);
   }
 
-  // Se usa gemini-2.0-flash para evitar errores 429 (Too Many Requests) del modelo Pro Preview
-  const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
-    contents: finalPrompt,
-    config: {
-      temperature: 0.9, 
-    },
-  });
-
-  return processResponse(response.text || "");
+  const result = await generateWithFallback(ai, finalPrompt, { temperature: 0.9 });
+  return processResponse(result.text, result.modelUsed);
 };
 
 export const updateLearningUnit = async (currentHtml: string, feedback: string): Promise<GenerationResult> => {
@@ -81,12 +115,8 @@ export const updateLearningUnit = async (currentHtml: string, feedback: string):
     .replace("[CURRENT_HTML]", currentHtml)
     .replace("[USER_FEEDBACK]", feedback);
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents: finalPrompt,
-  });
-
-  return processResponse(response.text || "");
+  const result = await generateWithFallback(ai, finalPrompt);
+  return processResponse(result.text, result.modelUsed);
 };
 
 export const suggestInterdisciplinarity = async (programText: string, level: string): Promise<string> => {
@@ -95,10 +125,7 @@ export const suggestInterdisciplinarity = async (programText: string, level: str
   
   PROGRAMA: ${programText.substring(0, 5000)}`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents: prompt
-  });
-
-  return (response.text || "").trim();
+  // Para sugerencias simples, también usamos fallback para asegurar disponibilidad
+  const result = await generateWithFallback(ai, prompt);
+  return (result.text || "").trim();
 };

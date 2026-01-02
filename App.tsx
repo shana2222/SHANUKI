@@ -111,7 +111,7 @@ const App: React.FC = () => {
     } catch (error: any) {
       console.error("Error generando unidad:", error);
       let msg = "Error al generar la unidad. ";
-      if (error.toString().includes("429")) msg += "El servicio está saturado (Error 429). Por favor espera un momento e intenta de nuevo.";
+      if (error.toString().includes("429")) msg += "Todos los modelos están saturados. Por favor espera un momento.";
       else msg += "Verifica la consola y tu API Key.";
       alert(msg);
     } finally {
@@ -130,12 +130,14 @@ const App: React.FC = () => {
     } catch (error: any) {
       console.error(error);
       let msg = "Error al actualizar. ";
-      if (error.toString().includes("429")) msg += "Cuota excedida (429). Espera un momento.";
+      if (error.toString().includes("429")) msg += "Cuota excedida. Espera un momento.";
       alert(msg);
     } finally {
       setIsRegenerating(false);
     }
   };
+
+  const isLowTierModel = result?.modelUsed === 'gemini-2.0-flash';
 
   return (
     <div className="min-h-screen flex flex-col bg-background-dark">
@@ -359,6 +361,20 @@ const App: React.FC = () => {
                 </button>
               </div>
             </div>
+
+            {/* Warning Banner for Low Tier Model */}
+            {isLowTierModel && (
+              <div className="bg-yellow-900/30 border border-yellow-600/50 p-4 rounded-xl flex items-start gap-3 animate-in">
+                <span className="material-symbols-outlined text-yellow-500">warning</span>
+                <div>
+                  <h4 className="text-yellow-500 font-bold text-sm">Advertencia de Capacidad</h4>
+                  <p className="text-yellow-200/80 text-xs">
+                    El modelo disponible actualmente (Gemini 2.0/1.5) no generará experiencias visuales tan detalladas como los modelos Pro. 
+                    Si deseas mejores resultados gráficos y narrativos, intenta generar nuevamente más tarde.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Main Content: Editor & Preview */}
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">

@@ -23,4 +23,5 @@ export interface UnitFormInputs {
 export interface GenerationResult {
   html: string;
   distractorWords: string[];
+  modelUsed?: string;
 }

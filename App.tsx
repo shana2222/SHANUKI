@@ -82,7 +82,7 @@ const App: React.FC = () => {
             setInputs(prev => ({ ...prev, interdisciplinarySubject: suggestion }));
         } catch (apiError) {
             console.error("Error de API al analizar interdisciplinariedad:", apiError);
-            alert("No se pudo conectar con la IA para analizar el programa. Verifica que la API Key esté configurada correctamente en Vercel. Puedes ingresar la materia manualmente.");
+            alert("No se pudo conectar con la IA para analizar el programa. Verifica que la API Key esté configurada correctamente en Vercel o en tu archivo .env. Puedes ingresar la materia manualmente.");
         } finally {
             setSuggesting(false);
         }
@@ -140,7 +140,15 @@ const App: React.FC = () => {
         </div>
         <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-gray-500">
           <span className="hidden sm:inline">Generador Didáctico 5.0</span>
-          <div className="size-8 rounded-full border border-gray-700 bg-[url('https://api.dicebear.com/7.x/bottts/svg?seed=shanuki')] bg-cover" />
+          <img 
+            src="logoCC.png" 
+            onError={(e) => {
+              e.currentTarget.src = "https://api.dicebear.com/7.x/bottts/svg?seed=shanuki";
+              e.currentTarget.onerror = null; // Previene bucles infinitos si la imagen de fallback falla
+            }}
+            alt="Perfil" 
+            className="size-9 rounded-full border border-gray-700 object-cover bg-white" 
+          />
         </div>
       </header>
 

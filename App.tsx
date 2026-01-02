@@ -165,9 +165,17 @@ const App: React.FC = () => {
       <main className="flex-1 px-4 py-8 md:px-10 lg:px-20 max-w-7xl mx-auto w-full">
         {step === 1 ? (
           <div className="space-y-8 animate-in">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-black text-white tracking-tight">Diseñador de Experiencias</h1>
-              <p className="text-gray-400">Crea recursos educativos potentes combinando teoría técnica y metodologías activas.</p>
+            <div className="space-y-4">
+              <div>
+                <h1 className="text-4xl font-black text-white tracking-tight">Diseñador de Experiencias</h1>
+                <p className="text-gray-400 mt-1">Crea recursos educativos potentes combinando teoría técnica y metodologías activas.</p>
+              </div>
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex gap-3 items-start max-w-4xl">
+                <span className="material-symbols-outlined text-blue-400 mt-0.5">integration_instructions</span>
+                <p className="text-sm text-blue-100/90 leading-relaxed">
+                  Se generará un HTML con estilo y programación listo para que lo copies y lo implementes en <strong>CREA</strong> o en <strong>Trinket</strong>, permitiéndote llevar la práctica al aula de forma inmediata.
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

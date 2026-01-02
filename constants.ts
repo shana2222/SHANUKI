@@ -24,6 +24,7 @@ ESPECIFICACIONES TÉCNICAS (HTML5):
 - UI: Estética profesional, responsiva.
 - Editor de código: Manejo de TAB (4 espacios), consola de salida, y validación con casos de prueba.
 - Generador de PDF: Debe capturar el proceso del estudiante (nombre, nivel, puntaje quiz, código final y resultado de validación).
+- Footer: TODAS las páginas deben incluir un pie de página (footer) visible, centrado y estilizado con el siguiente texto exacto: "Recurso generado por la app SHANUKI creado por el equipo académico de ciencias de la computación - CEIBAL - DPD y Licencia: Creative Commons CC BY-SA 4.0".
 
 IMPORTANTE:
 1. Entrega ÚNICAMENTE el código HTML completo y funcional.
@@ -92,5 +93,6 @@ El docente solicita el siguiente cambio/ajuste:
 INSTRUCCIONES:
 1. Modifica el código HTML existente para satisfacer la solicitud del docente.
 2. Mantén la estructura funcional (Pyodide, PDF, etc.).
-3. Devuelve el HTML completo corregido.
-4. Incluye nuevamente el bloque <SHANUKI_DATA> al final.`;
+3. Asegúrate de que el footer incluya el texto obligatorio: "Recurso generado por la app SHANUKI creado por el equipo académico de ciencias de la computación - CEIBAL - DPD y Licencia: Creative Commons CC BY-SA 4.0".
+4. Devuelve el HTML completo corregido.
+5. Incluye nuevamente el bloque <SHANUKI_DATA> al final.`;

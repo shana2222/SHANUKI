@@ -1,0 +1,5 @@
+{
+  "name": "Shanuki - Generador de Unidades de Aprendizaje",
+  "description": "Herramienta avanzada para docentes que genera unidades de aprendizaje interactivas en un solo archivo HTML (teoría, quizzes y desafíos prácticos) utilizando IA.",
+  "requestFramePermissions": []
+}

@@ -57,23 +57,35 @@ const App: React.FC = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'cs' | 'program') => {
     const file = e.target.files?.[0];
     if (file) {
+      // 1. Intentar extraer texto del PDF
+      let text = "";
       try {
-        const text = await extractTextFromPDF(file);
-        if (type === 'cs') {
-          setCsFileName(file.name);
-          setInputs(prev => ({ ...prev, csTheoryText: text }));
-        } else {
-          setProgramFileName(file.name);
-          setInputs(prev => ({ ...prev, programText: text }));
-          
-          setSuggesting(true);
-          const suggestion = await suggestInterdisciplinarity(text, inputs.level);
-          setInputs(prev => ({ ...prev, interdisciplinarySubject: suggestion }));
-          setSuggesting(false);
-        }
+        text = await extractTextFromPDF(file);
       } catch (err) {
         console.error("Error al leer PDF:", err);
-        alert("No se pudo leer el contenido del PDF.");
+        alert("No se pudo leer el archivo PDF. Asegúrate de que no esté dañado.");
+        return;
+      }
+
+      // 2. Procesar el texto según el tipo
+      if (type === 'cs') {
+        setCsFileName(file.name);
+        setInputs(prev => ({ ...prev, csTheoryText: text }));
+      } else {
+        setProgramFileName(file.name);
+        setInputs(prev => ({ ...prev, programText: text }));
+        
+        // Llamada a la IA para sugerencias (Manejo de error específico)
+        try {
+            setSuggesting(true);
+            const suggestion = await suggestInterdisciplinarity(text, inputs.level);
+            setInputs(prev => ({ ...prev, interdisciplinarySubject: suggestion }));
+        } catch (apiError) {
+            console.error("Error de API al analizar interdisciplinariedad:", apiError);
+            alert("No se pudo conectar con la IA para analizar el programa. Verifica que la API Key esté configurada correctamente en Vercel. Puedes ingresar la materia manualmente.");
+        } finally {
+            setSuggesting(false);
+        }
       }
     }
   };
@@ -94,8 +106,8 @@ const App: React.FC = () => {
       setResult(data);
       setStep(2);
     } catch (error) {
-      console.error(error);
-      alert("Error al generar la unidad.");
+      console.error("Error generando unidad:", error);
+      alert("Error al generar la unidad. Verifica la consola y tu API Key.");
     } finally {
       setLoading(false);
     }

@@ -2,17 +2,19 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
-  // Carga las variables de entorno para que estén disponibles en el proceso de build
-  // El tercer argumento '' permite cargar todas las variables, no solo las que empiezan con VITE_
+  // Carga variables desde archivos .env (si existen)
   const env = loadEnv(mode, (process as any).cwd(), '');
+  
+  // Prioridad: 1. Variable del sistema (Vercel CI/CD), 2. Variable cargada por Vite (.env)
+  const apiKey = process.env.API_KEY || env.API_KEY;
 
   return {
     plugins: [react()],
     define: {
-      // Esto reemplaza 'process.env.API_KEY' en tu código con el valor real de Vercel durante el build
-      'process.env.API_KEY': JSON.stringify(env.API_KEY),
-      // Evita errores de "process is not defined" en el navegador
-      'process.env': {}
+      // Inyecta el valor de la API Key en el código del cliente
+      'process.env.API_KEY': JSON.stringify(apiKey),
+      // Polyfill seguro para process.env para evitar crashes, sin sobrescribir la API_KEY
+      'process.env': {} 
     }
   };
 });

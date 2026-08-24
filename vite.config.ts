@@ -10,11 +10,13 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    server: {
+      allowedHosts: ['.vercel.run', 'localhost'],
+    },
     define: {
-      // Inyecta el valor de la API Key en el código del cliente
-      'process.env.API_KEY': JSON.stringify(apiKey),
-      // Polyfill seguro para process.env para evitar crashes, sin sobrescribir la API_KEY
-      'process.env': {} 
+      // La app usa el SDK web de Google GenAI, por eso esta variable debe quedar
+      // disponible explícitamente en el bundle del navegador.
+      'process.env.API_KEY': JSON.stringify(apiKey || '')
     }
   };
 });

@@ -3,45 +3,40 @@ import { GoogleGenAI } from "@google/genai";
 import { UnitFormInputs, GenerationResult } from "../types";
 import { PBL_PROMPT, GAMIFIED_PROMPT, EDIT_PROMPT } from "../constants";
 
-// Jerarquía de modelos: Alta Calidad -> Velocidad/Media -> Fallback Seguro
-const MODELS = [
-  "gemini-3-pro-preview",    // Intento 1: Máxima calidad
-  "gemini-3-flash-preview",  // Intento 2: Balanceado (Equivalente a tu petición de 2.5)
-  "gemini-2.0-flash"         // Intento 3: Fallback (Equivalente a tu petición de 1.5/Low tier)
-];
+// Modelos estables actuales. Los modelos *preview* anteriores dejaron de estar disponibles.
+const MODELS = ["gemini-2.5-flash", "gemini-2.5-pro"] as const;
 
-// Helper para ejecutar con fallback
-const generateWithFallback = async (ai: GoogleGenAI, prompt: string, config: any = {}) => {
-  let lastError: any = null;
+const getApiKey = () => {
+  const apiKey = process.env.API_KEY?.trim();
+  if (!apiKey) {
+    throw new Error("Falta API_KEY. Configúrala en las variables de entorno del proyecto.");
+  }
+  return apiKey;
+};
+
+const isRetryableError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  return /429|500|502|503|504|quota|rate.?limit|overloaded|timeout/i.test(message);
+};
+
+// Reintenta únicamente ante saturación/cuota/errores transitorios y cambia de modelo.
+const generateWithFallback = async (ai: GoogleGenAI, prompt: string, config = {}) => {
+  let lastError: unknown;
 
   for (const model of MODELS) {
     try {
-      console.log(`Intentando generar con modelo: ${model}`);
-      const response = await ai.models.generateContent({
-        model: model,
-        contents: prompt,
-        config: config,
-      });
-      
-      // Si llegamos aquí, funcionó
-      return { 
-        text: response.text || "", 
-        modelUsed: model 
-      };
-    } catch (error: any) {
-      console.warn(`Fallo en modelo ${model}:`, error.message);
+      const response = await ai.models.generateContent({ model, contents: prompt, config });
+      const text = response.text?.trim();
+      if (!text) throw new Error(`El modelo ${model} devolvió una respuesta vacía.`);
+      return { text, modelUsed: model };
+    } catch (error) {
       lastError = error;
-      
-      // Si es un error de cuota (429) o servidor (503), continuamos al siguiente modelo.
-      // Si es otro tipo de error (ej. API Key inválida), tal vez deberíamos detenernos, 
-      // pero para asegurar robustez intentaremos el fallback.
-      if (model === MODELS[MODELS.length - 1]) {
-        // Si falló el último modelo, lanzamos el error
-        throw lastError;
-      }
+      console.warn(`[SHANUKI IA] Fallo con ${model}:`, error);
+      if (!isRetryableError(error)) throw error;
     }
   }
-  throw lastError;
+
+  throw lastError instanceof Error ? lastError : new Error("No fue posible generar el recurso.");
 };
 
 const processResponse = (text: string, modelUsed: string): GenerationResult => {
@@ -83,7 +78,7 @@ const processResponse = (text: string, modelUsed: string): GenerationResult => {
 };
 
 export const generateLearningUnit = async (inputs: UnitFormInputs): Promise<GenerationResult> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   
   let selectedPrompt = inputs.mode === 'gamified' ? GAMIFIED_PROMPT : PBL_PROMPT;
   
@@ -109,7 +104,7 @@ export const generateLearningUnit = async (inputs: UnitFormInputs): Promise<Gene
 };
 
 export const updateLearningUnit = async (currentHtml: string, feedback: string): Promise<GenerationResult> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
   const finalPrompt = EDIT_PROMPT
     .replace("[CURRENT_HTML]", currentHtml)
@@ -120,7 +115,7 @@ export const updateLearningUnit = async (currentHtml: string, feedback: string):
 };
 
 export const suggestInterdisciplinarity = async (programText: string, level: string): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const prompt = `Analiza el siguiente fragmento de programa escolar de ${level} y sugiere una temática interdisciplinaria para un proyecto de informática basado en problemas (ABP). Devuelve solo el nombre de la materia y el tema en una frase corta (máximo 10 palabras).
   
   PROGRAMA: ${programText.substring(0, 5000)}`;

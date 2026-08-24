@@ -3,8 +3,8 @@ import { GoogleGenAI } from "@google/genai";
 import { UnitFormInputs, GenerationResult, LearningProposal } from "../types";
 import { PBL_PROMPT, GAMIFIED_PROMPT, EDIT_PROMPT } from "../constants";
 
-// Modelos estables actuales. Los modelos *preview* anteriores dejaron de estar disponibles.
-const MODELS = ["gemini-2.5-flash", "gemini-2.5-pro"] as const;
+// Gemini solicita migrar los modelos antiguos a esta versión disponible para usuarios nuevos.
+const MODELS = ["gemini-3.6-flash"] as const;
 
 const getApiKey = () => {
   const apiKey = process.env.API_KEY?.trim();

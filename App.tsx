@@ -155,7 +155,7 @@ const App: React.FC = () => {
     }
   };
 
-  const isLowTierModel = result?.modelUsed === 'gemini-2.5-flash';
+  const isLowTierModel = result?.modelUsed === 'gemini-3.6-flash';
 
   return (
     <div className="min-h-screen flex flex-col bg-background-dark">

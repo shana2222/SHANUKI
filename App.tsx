@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
-import { UnitFormInputs, GenerationResult, GenerationMode } from './types';
-import { generateLearningUnit, suggestInterdisciplinarity, updateLearningUnit } from './services/geminiService';
+import { UnitFormInputs, GenerationResult, LearningProposal } from './types';
+import { generateLearningProposal, generateLearningUnit, suggestInterdisciplinarity, updateLearningUnit } from './services/geminiService';
 import { INTERDISCIPLINARY_SUGGESTIONS, EDUCATIONAL_LEVELS, GAMIFIED_THEMES } from './constants';
 
 const App: React.FC = () => {
@@ -14,12 +14,16 @@ const App: React.FC = () => {
     interdisciplinarySubject: '',
     context: '',
     programText: '',
-    narrativeTheme: GAMIFIED_THEMES[0]
+    narrativeTheme: GAMIFIED_THEMES[0],
+    resourceName: '', subjectArea: 'Ciencias de la Computación', objectives: '', contents: '',
+    duration: '', audience: 'ESTUDIANTES', approach: 'MANUAL INTERACTIVO', activityCount: '4',
+    accessibility: 'Navegación por teclado y alto contraste', evaluation: 'FORMATIVA'
   });
   
   const [loading, setLoading] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
   const [result, setResult] = useState<GenerationResult | null>(null);
+  const [proposal, setProposal] = useState<LearningProposal | null>(null);
   const [step, setStep] = useState(1);
   const [feedback, setFeedback] = useState("");
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -105,8 +109,8 @@ const App: React.FC = () => {
 
     setLoading(true);
     try {
-      const data = await generateLearningUnit(inputs);
-      setResult(data);
+      const data = await generateLearningProposal(inputs);
+      setProposal(data);
       setStep(2);
     } catch (error: any) {
       console.error("Error generando unidad:", error);
@@ -114,6 +118,21 @@ const App: React.FC = () => {
       if (error.toString().includes("429")) msg += "Todos los modelos están saturados. Por favor espera un momento.";
       else msg += "Verifica la consola y tu API Key.";
       alert(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApproveProposal = async () => {
+    if (!proposal) return;
+    setLoading(true);
+    try {
+      const data = await generateLearningUnit(inputs);
+      setResult(data);
+      setStep(3);
+    } catch (error) {
+      console.error('[v0] Error produciendo recurso aprobado:', error);
+      alert(error instanceof Error ? error.message : 'No se pudo crear el recurso.');
     } finally {
       setLoading(false);
     }
@@ -137,7 +156,7 @@ const App: React.FC = () => {
     }
   };
 
-  const isLowTierModel = result?.modelUsed === 'gemini-2.0-flash';
+  const isLowTierModel = result?.modelUsed === 'gemini-2.5-flash';
 
   return (
     <div className="min-h-screen flex flex-col bg-background-dark">
@@ -208,6 +227,13 @@ const App: React.FC = () => {
                       className="w-full h-12 bg-gray-900 border border-gray-700 rounded-xl px-4 text-sm text-white focus:ring-2 focus:ring-primary outline-none"
                       placeholder="ej. Ciclos For/While"
                     />
+                  </div>
+
+                  <div className="space-y-4 border-t border-gray-700/50 pt-4">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-primary">Ficha docente</label>
+                    <input name="resourceName" value={inputs.resourceName} onChange={handleInputChange} className="h-11 w-full rounded-xl border border-gray-700 bg-gray-900 px-4 text-sm text-white outline-none focus:ring-2 focus:ring-primary" placeholder="Nombre del recurso" />
+                    <textarea name="objectives" value={inputs.objectives} onChange={handleInputChange} rows={2} className="w-full resize-none rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-white outline-none focus:ring-2 focus:ring-primary" placeholder="Objetivos observables (uno por línea)" />
+                    <textarea name="contents" value={inputs.contents} onChange={handleInputChange} rows={2} className="w-full resize-none rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-white outline-none focus:ring-2 focus:ring-primary" placeholder="Contenidos imprescindibles" />
                   </div>
 
                   <div className="space-y-2 pt-2 border-t border-gray-700/50">
@@ -328,6 +354,29 @@ const App: React.FC = () => {
               </div>
             </div>
           </div>
+        ) : step === 2 && proposal ? (
+          <section className="mx-auto max-w-4xl space-y-6 animate-in" aria-labelledby="proposal-title">
+            <div className="rounded-3xl border border-primary/30 bg-gray-800/40 p-8 shadow-2xl">
+              <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">Fase 2 · Propuesta para aprobación docente</p>
+              <h1 id="proposal-title" className="text-3xl font-black text-white">Revisa el diseño antes de crear</h1>
+              <p className="mt-3 leading-relaxed text-gray-300">{proposal.summary}</p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              {[['Objetivos', proposal.objectives], ['Estructura', proposal.structure], ['Actividades', proposal.activities], ['Accesibilidad DUA', proposal.accessibility]].map(([title, items]) => (
+                <article key={String(title)} className="rounded-2xl border border-gray-700 bg-gray-800/40 p-6">
+                  <h2 className="mb-3 font-bold text-white">{title}</h2>
+                  <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-300">{(items as string[]).map((item) => <li key={item}>{item}</li>)}</ul>
+                </article>
+              ))}
+            </div>
+            <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-6 text-sm text-blue-100">
+              <strong>Estilo:</strong> {proposal.visualStyle}<br /><strong>Retroalimentación:</strong> {proposal.feedback}
+            </div>
+            <div className="flex flex-wrap justify-end gap-3">
+              <button onClick={() => setStep(1)} className="h-12 rounded-xl border border-gray-600 px-6 font-bold text-gray-300 hover:bg-gray-800">Ajustar ficha</button>
+              <button onClick={handleApproveProposal} disabled={loading} className="h-12 rounded-xl bg-primary px-8 font-black text-gray-950 disabled:opacity-50">{loading ? 'CREANDO RECURSO...' : 'APROBAR Y CREAR RECURSO'}</button>
+            </div>
+          </section>
         ) : (
           <div className="space-y-6 animate-in">
             {/* Header Result */}

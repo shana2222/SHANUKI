@@ -1,6 +1,6 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { UnitFormInputs, GenerationResult } from "../types";
+import { UnitFormInputs, GenerationResult, LearningProposal } from "../types";
 import { PBL_PROMPT, GAMIFIED_PROMPT, EDIT_PROMPT } from "../constants";
 
 // Modelos estables actuales. Los modelos *preview* anteriores dejaron de estar disponibles.
@@ -37,6 +37,14 @@ const generateWithFallback = async (ai: GoogleGenAI, prompt: string, config = {}
   }
 
   throw lastError instanceof Error ? lastError : new Error("No fue posible generar el recurso.");
+};
+
+const extractJson = <T,>(text: string): T => {
+  const cleaned = text.replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/i, '').trim();
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start < 0 || end < start) throw new Error('La IA no devolvió una propuesta JSON válida.');
+  return JSON.parse(cleaned.slice(start, end + 1)) as T;
 };
 
 const processResponse = (text: string, modelUsed: string): GenerationResult => {
@@ -77,29 +85,33 @@ const processResponse = (text: string, modelUsed: string): GenerationResult => {
   };
 };
 
+const buildPrompt = (inputs: UnitFormInputs, production = false) => {
+  const selectedPrompt = inputs.mode === 'gamified' ? GAMIFIED_PROMPT : PBL_PROMPT;
+  const prompt = selectedPrompt
+    .replaceAll('[NIVEL]', inputs.level).replaceAll('[LENGUAJE]', inputs.language)
+    .replaceAll('[TEMA]', inputs.topic).replaceAll('[CS_THEORY_TEXT]', inputs.csTheoryText || 'No se adjuntó material teórico.')
+    .replaceAll('[MATERIA]', inputs.interdisciplinarySubject).replaceAll('[CONTEXTO]', inputs.context)
+    .replaceAll('[PROGRAM_TEXT]', inputs.programText || 'No se adjuntó programa interdisciplinario.')
+    .replaceAll('[NARRATIVA]', inputs.narrativeTheme);
+  const phase = production
+    ? 'IGNORA la salida JSON de propuesta: la propuesta ya fue aprobada. Devuelve únicamente el HTML completo, sin markdown ni explicaciones.'
+    : 'FASE DE PROPUESTA: devuelve solo JSON válido según el flujo SHANUKI y no generes HTML.';
+  return `${prompt}\n\nFICHA DOCENTE:\n${JSON.stringify(inputs)}\n\n${phase}`;
+};
+
+export const generateLearningProposal = async (inputs: UnitFormInputs): Promise<LearningProposal> => {
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
+  const result = await generateWithFallback(ai, buildPrompt(inputs));
+  try {
+    return { ...extractJson<Omit<LearningProposal, 'modelUsed'>>(result.text), modelUsed: result.modelUsed };
+  } catch {
+    throw new Error('La propuesta recibida no tiene el formato esperado. Intenta nuevamente.');
+  }
+};
+
 export const generateLearningUnit = async (inputs: UnitFormInputs): Promise<GenerationResult> => {
   const ai = new GoogleGenAI({ apiKey: getApiKey() });
-  
-  let selectedPrompt = inputs.mode === 'gamified' ? GAMIFIED_PROMPT : PBL_PROMPT;
-  
-  // Common replacements
-  let finalPrompt = selectedPrompt
-    .replace("[NIVEL]", inputs.level)
-    .replace("[LENGUAJE]", inputs.language)
-    .replace("[TEMA]", inputs.topic)
-    .replace("[CS_THEORY_TEXT]", inputs.csTheoryText || "Usa tu conocimiento general, no se adjuntó teórico específico.");
-
-  if (inputs.mode === 'pbl') {
-    finalPrompt = finalPrompt
-      .replace("[MATERIA]", inputs.interdisciplinarySubject)
-      .replace("[CONTEXTO]", inputs.context)
-      .replace("[PROGRAM_TEXT]", inputs.programText || "No se cargó archivo de programa interdisciplinario.");
-  } else {
-    finalPrompt = finalPrompt
-      .replace("[NARRATIVA]", inputs.narrativeTheme);
-  }
-
-  const result = await generateWithFallback(ai, finalPrompt, { temperature: 0.9 });
+  const result = await generateWithFallback(ai, buildPrompt(inputs, true), { temperature: 0.7 });
   return processResponse(result.text, result.modelUsed);
 };
 

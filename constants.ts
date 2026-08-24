@@ -27,8 +27,16 @@ ESPECIFICACIONES TÉCNICAS (HTML5):
 - Generador de PDF: Debe capturar el proceso del estudiante (nombre, nivel, puntaje quiz, código final y resultado de validación).
 - Footer: TODAS las páginas deben incluir un pie de página (footer) visible, centrado y estilizado con el siguiente texto exacto: "Recurso generado por la app SHANUKI creado por el equipo académico de ciencias de la computación - CEIBAL - DPD y Licencia: Creative Commons CC BY-SA 4.0".
 
-IMPORTANTE:
-1. Entrega ÚNICAMENTE el código HTML completo y funcional.
+FLUJO OBLIGATORIO SHANUKI:
+- Primero devuelve una PROPUESTA en JSON válida, sin markdown, con estas claves: summary, objectives, structure, activities, feedback, accessibility, visualStyle, dynamicData, dependencies, validationDecisions.
+- No generes HTML en esta primera respuesta.
+- La propuesta debe respetar DUA, evaluación formativa, progresión de reconocimiento a creación y baja carga cognitiva.
+- Solo cuando el docente la apruebe se solicitará la producción del HTML.
+
+REGLAS DE PRODUCCIÓN:
+- En fase de propuesta devuelve únicamente JSON válido, sin markdown.
+- En fase de producción entrega únicamente el código HTML completo y funcional.
+- Nunca inventes datos faltantes ni expongas soluciones en placeholders o pistas tempranas.
 `;
 
 export const PBL_PROMPT = `PROMPT: UNIDAD DE APRENDIZAJE INTEGRAL CON ABP (TEORÍA + QUIZ + CÓDIGO)

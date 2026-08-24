@@ -364,7 +364,7 @@ const App: React.FC = () => {
               {[['Objetivos', proposal.objectives], ['Estructura', proposal.structure], ['Actividades', proposal.activities], ['Accesibilidad DUA', proposal.accessibility]].map(([title, items]) => (
                 <article key={String(title)} className="rounded-2xl border border-gray-700 bg-gray-800/40 p-6">
                   <h2 className="mb-3 font-bold text-white">{title}</h2>
-                  <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-300">{(items as string[]).map((item) => <li key={item}>{item}</li>)}</ul>
+                  <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-300">{(Array.isArray(items) ? items : [items]).filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map((item, index) => <li key={`${String(title)}-${index}`}>{item}</li>)}</ul>
                 </article>
               ))}
             </div>

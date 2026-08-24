@@ -14,6 +14,14 @@ const getApiKey = () => {
   return apiKey;
 };
 
+const describeApiError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/401|403|api key|permission|unauthenticated/i.test(message)) return 'La API Key es inválida o no tiene habilitada la Gemini API.';
+  if (/404|not found|model/i.test(message)) return 'El modelo de Gemini no está disponible para esta API Key.';
+  if (/429|quota|rate.?limit|overloaded/i.test(message)) return 'Se alcanzó la cuota o el límite temporal de la API.';
+  return message;
+};
+
 const isRetryableError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   return /429|500|502|503|504|quota|rate.?limit|overloaded|timeout/i.test(message);
@@ -40,7 +48,7 @@ const generateWithFallback = async (ai: GoogleGenAI, prompt: string, config = {}
 };
 
 const extractJson = <T,>(text: string): T => {
-  const cleaned = text.replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/i, '').trim();
+  const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
   const start = cleaned.indexOf('{');
   const end = cleaned.lastIndexOf('}');
   if (start < 0 || end < start) throw new Error('La IA no devolvió una propuesta JSON válida.');
@@ -78,10 +86,14 @@ const processResponse = (text: string, modelUsed: string): GenerationResult => {
     distractors = ["Error", "Bug", "Fallo", "Null", "Undefined", "False"];
   }
 
+  if (!html) {
+    throw new Error('La IA respondió, pero no devolvió un documento HTML válido. Intenta nuevamente.');
+  }
+
   return {
-    html: html || "Error al generar el HTML.",
+    html,
     distractorWords: distractors,
-    modelUsed: modelUsed
+    modelUsed
   };
 };
 
@@ -101,7 +113,10 @@ const buildPrompt = (inputs: UnitFormInputs, production = false) => {
 
 export const generateLearningProposal = async (inputs: UnitFormInputs): Promise<LearningProposal> => {
   const ai = new GoogleGenAI({ apiKey: getApiKey() });
-  const result = await generateWithFallback(ai, buildPrompt(inputs));
+  const result = await generateWithFallback(ai, buildPrompt(inputs), {
+    temperature: 0.4,
+    responseMimeType: 'application/json'
+  });
   try {
     return { ...extractJson<Omit<LearningProposal, 'modelUsed'>>(result.text), modelUsed: result.modelUsed };
   } catch {

@@ -113,11 +113,9 @@ const App: React.FC = () => {
       setProposal(data);
       setStep(2);
     } catch (error: any) {
-      console.error("Error generando unidad:", error);
-      let msg = "Error al generar la unidad. ";
-      if (error.toString().includes("429")) msg += "Todos los modelos están saturados. Por favor espera un momento.";
-      else msg += "Verifica la consola y tu API Key.";
-      alert(msg);
+      console.error('[v0] Error generando propuesta:', error);
+      const detail = error instanceof Error ? error.message : String(error);
+      alert(`No se pudo generar la propuesta.\n\n${detail}`);
     } finally {
       setLoading(false);
     }
@@ -132,7 +130,8 @@ const App: React.FC = () => {
       setStep(3);
     } catch (error) {
       console.error('[v0] Error produciendo recurso aprobado:', error);
-      alert(error instanceof Error ? error.message : 'No se pudo crear el recurso.');
+      const detail = error instanceof Error ? error.message : String(error);
+      alert(`No se pudo crear el recurso.\n\n${detail}`);
     } finally {
       setLoading(false);
     }
@@ -186,7 +185,7 @@ const App: React.FC = () => {
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex gap-3 items-start max-w-4xl">
                 <span className="material-symbols-outlined text-blue-400 mt-0.5">integration_instructions</span>
                 <p className="text-sm text-blue-100/90 leading-relaxed">
-                  Se generará un HTML con estilo y programación listo para que lo copies y lo implementes en <strong>CREA</strong> o en <strong>Trinket</strong>, permitiéndote llevar la práctica al aula de forma inmediata.
+                  Se generará un HTML con estilo y programación listo para que lo copies y lo implementes en <strong>CREA</strong>, permitiéndote llevar la práctica al aula de forma inmediata.
                 </p>
               </div>
             </div>

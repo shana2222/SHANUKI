@@ -52,7 +52,15 @@ const App: React.FC = () => {
     for (let i = 1; i <= numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      const pageText = textContent.items.map((item: any) => item.str).join(" ");
+      const textItems = Array.isArray(textContent?.items)
+        ? textContent.items
+        : textContent?.items && typeof textContent.items.length === 'number'
+          ? Array.from(textContent.items)
+          : [];
+      const pageText = textItems
+        .map((item: any) => typeof item?.str === 'string' ? item.str : '')
+        .filter(Boolean)
+        .join(" ");
       fullText += pageText + " ";
     }
     return fullText;
